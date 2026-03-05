@@ -15,14 +15,22 @@ The goal of this lab is to demonstrate how organizations migrate on-premise work
 
 ---
 
-# Architecture Overview
+## Architecture Overview
 
-This environment was built to mimic a common enterprise migration design:
+This lab simulates a lift-and-shift migration into AWS using a secure, enterprise-style layout:
 
-- Public traffic enters through an **Application Load Balancer**
-- Application servers run in a **private subnet**
-- Servers reach the internet through a **NAT Gateway**
-- Systems are managed securely through **AWS Systems Manager (SSM)**
+- **Public access is only through an Application Load Balancer (ALB)**.
+- The **web server runs on an EC2 instance in a private subnet** (no public IP).
+- The private instance gets outbound internet access for updates through a **NAT Gateway**.
+- Administration is done through **AWS Systems Manager (SSM)** (no inbound SSH).
+
+**Traffic flow (users):**
+- Internet → ALB (Public Subnet) → EC2 (Private Subnet)
+
+**Outbound flow (updates):**
+- EC2 (Private Subnet) → NAT Gateway (Public Subnet) → Internet Gateway → Internet
+
+![Architecture Diagram](images/diagrams/migration-lab-2-architecture.png)
 
 ```
 Internet
@@ -99,13 +107,29 @@ The application was accessed through the **ALB DNS endpoint**.
 
 ## Phase 3 — AWS MGN Replication
 
-The **AWS Application Migration Service replication agent** was installed on the source server.
+## Migration Workflow (AWS MGN)
 
-MGN began:
+This lab simulates a real lift-and-shift migration using AWS Application Migration Service (MGN).
 
-- Continuous block-level replication
-- Disk snapshot synchronization
-- Creation of staging replication resources
+### 1. Source Server Preparation
+A Linux EC2 instance was launched in a private subnet to simulate an on-premise server.
+
+Configuration steps:
+- Installed **Nginx**
+- Created a `/health` endpoint returning `ok`
+- Verified outbound connectivity through the **NAT Gateway**
+- Verified management access using **AWS Systems Manager (SSM)**
+
+---
+
+### 2. Replication Setup
+The **AWS MGN replication agent** was installed on the source server.
+
+MGN then performed:
+
+- Continuous **block-level replication**
+- Disk synchronization to AWS
+- Creation of temporary **replication infrastructure**
 
 Replication status reached **Healthy**.
 
